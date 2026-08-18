@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國中必備 KK 音標特訓</title>
+    <style>
+        :root { --primary: #4A90E2; --bg: #F5F7FA; --card: #FFFFFF; --text: #333333; --error: #E74C3C; --success: #2ECC71;}
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); text-align: center; padding: 20px; margin: 0;}
+        #app-container { max-width: 500px; margin: 0 auto; background: var(--card); padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .mode-title { font-size: 1.2rem; color: #888; margin-bottom: 5px; }
+        .score-board { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: bold; color: var(--primary); }
+        .play-btn { font-size: 60px; background: none; border: none; cursor: pointer; margin: 20px 0; transition: transform 0.1s; display: inline-flex; justify-content: center; align-items: center; width: 100px; height: 100px; border-radius: 50%; background-color: #e3f2fd; color: var(--primary); }
+        .play-btn:active { transform: scale(0.9); }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .opt-btn { padding: 20px; font-size: 28px; font-weight: bold; border: 2px solid #e0e0e0; background: white; color: var(--text); border-radius: 15px; cursor: pointer; transition: all 0.2s; }
+        .opt-btn:hover { border-color: var(--primary); background-color: #f8fbff; }
+        .opt-btn:active { transform: scale(0.98); }
+        .opt-btn.correct { background-color: var(--success); color: white; border-color: var(--success); pointer-events: none;}
+        .opt-btn.wrong { background-color: var(--error); color: white; border-color: var(--error); pointer-events: none;}
+        #feedback { min-height: 60px; margin: 15px 0; font-size: 1.1rem; line-height: 1.5; font-weight: 500; }
+        .control-btns { display: flex; gap: 10px; justify-content: center; }
+        .action-btn { padding: 10px 20px; font-size: 1rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; }
+        .next-btn { background-color: var(--primary); display: none; width: 100%; }
+        .mistake-btn { background-color: #f39c12; }
+        #loading { font-size: 1.2rem; color: #666; margin: 50px 0; }
+        #quiz-section { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <div id="loading">⏳ 正在從 Google Sheets 載入題庫...</div>
+    
+    <div id="quiz-section">
+        <div class="score-board">
+            <span id="scoreDisplay">分數: 0</span>
+            <span id="mistakeCountDisplay">錯題本: 0 題</span>
+        </div>
+        
+        <div class="mode-title" id="modeTitle">一般測驗模式</div>
+        <h2>聽音頻，選出正確音標</h2>
+        
+        <!-- 移除了舊版的 <audio> 標籤，純按鈕觸發 Web Speech API -->
+        <button class="play-btn" onclick="playAudio()" id="playBtn">▶️</button>
+
+        <div class="options-grid" id="optionsContainer"></div>
+
+        <div id="feedback"></div>
+        
+        <div class="control-btns">
+            <button class="action-btn next-btn" id="nextBtn" onclick="nextQuestion()">下一題 ➔</button>
+        </div>
+        
+        <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
+        <button class="action-btn mistake-btn" onclick="toggleMistakeMode()" id="toggleModeBtn">進入錯題本特訓</button>
+    </div>
+</div>
+
+<script>
+    // --- 替換為您的 Google Sheets CSV 發布網址 ---
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUPZngQPLg7_HcY10pPZjJNJuAHyCofcX5E8_aUZaIcnwZRWVJscyV5qFb9naoqSGknUkzkfIeXA5P/pub?gid=1259489363&single=true&output=csv"; 
+
+    let allQuestions = [];
+    let currentPool = [];
+    let currentQuestion = null;
+    let score = 0;
+    let mistakes = JSON.parse(localStorage.getItem('kk_mistakes_v3')) || [];
+    let isMistakeMode = false;
+    let optionsLocked = false;
+
+    async function loadData() {
+        try {
+            const response = await fetch(CSV_URL);
+            const csvText = await response.text();
+            
+            const rows = csvText.split('\n').map(row => row.split(','));
+            
+            for(let i = 1; i < rows.length; i++) {
+                if(rows[i].length > 10) {
+                    allQuestions.push({
+                        id: rows[i][0],
+                        word: rows[i][3],
+                        correct: rows[i][7],
+                        options: [rows[i][7], rows[i][8], rows[i][9], rows[i][10]],
+                        tip: rows[i][11].replace(/"/g, '') 
+                    });
+                }
+            }
+            
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('quiz-section').style.display = 'block';
+            
+            currentPool = [...allQuestions];
+            updateUI();
+            nextQuestion();
+            
+        } catch (error) {
+            document.getElementById('loading').innerText = "❌ 載入失敗，請檢查網址是否正確。";
+            console.error(error);
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('scoreDisplay').innerText = `分數: ${score}`;
+        document.getElementById('mistakeCountDisplay').innerText = `錯題本: ${mistakes.length} 題`;
+        document.getElementById('modeTitle').innerText = isMistakeMode ? "🔥 錯題本特訓模式" : "📖 一般測驗模式";
+        document.getElementById('toggleModeBtn').innerText = isMistakeMode ? "返回一般測驗" : "進入錯題本特訓";
+    }
+
+    function nextQuestion() {
+        if(currentPool.length === 0) {
+            alert("題庫中沒有題目了！");
+            return;
+        }
+
+        optionsLocked = false;
+        document.getElementById('feedback').innerText = "";
+        document.getElementById('nextBtn').style.display = "none";
+
+        currentQuestion = currentPool[Math.floor(Math.random() * currentPool.length)];
+        
+        let shuffled = [...currentQuestion.options].sort(() => 0.5 - Math.random());
+        let html = "";
+        shuffled.forEach(opt => {
+            if(opt && opt.trim() !== "") {
+                html += `<button class="opt-btn" onclick="checkAnswer(this, '${opt}')">${opt}</button>`;
+            }
+        });
+        document.getElementById('optionsContainer').innerHTML = html;
+        
+        updateUI();
+        
+        // 延遲自動播放，確保介面已載入
+        setTimeout(playAudio, 300);
+    }
+
+    // --- Web Speech API (瀏覽器內建語音引擎) ---
+    function playAudio() {
+        if (!currentQuestion) return;
+        
+        // 停止前一次可能還在播放的語音
+        window.speechSynthesis.cancel();
+
+        // 建立語音實體
+        let utterance = new SpeechSynthesisUtterance(currentQuestion.word);
+        
+        // 設定美式英語發音
+        utterance.lang = 'en-US'; 
+        // 語速放慢到 0.85，適合國中生辨音
+        utterance.rate = 0.85;    
+        
+        // 播放
+        window.speechSynthesis.speak(utterance);
+        
+        // 按鈕視覺回饋
+        let btn = document.getElementById('playBtn');
+        btn.style.transform = "scale(1.1)";
+        setTimeout(() => btn.style.transform = "scale(1)", 200);
+    }
+
+    function checkAnswer(btnElement, selected) {
+        if(optionsLocked) return;
+        optionsLocked = true; 
+
+        let feedbackDiv = document.getElementById('feedback');
+        let nextBtn = document.getElementById('nextBtn');
+
+        if(selected === currentQuestion.correct) {
+            btnElement.classList.add('correct');
+            feedbackDiv.style.color = "var(--success)";
+            feedbackDiv.innerText = "✅ 答對了！太棒了！";
+            score += 10;
+            
+            if(isMistakeMode) {
+                mistakes = mistakes.filter(id => id !== currentQuestion.id);
+                localStorage.setItem('kk_mistakes_v3', JSON.stringify(mistakes));
+                currentPool = allQuestions.filter(q => mistakes.includes(q.id));
+            }
+        } else {
+            btnElement.classList.add('wrong');
+            document.querySelectorAll('.opt-btn').forEach(btn => {
+                if(btn.innerText === currentQuestion.correct) btn.classList.add('correct');
+            });
+
+            feedbackDiv.style.color = "var(--error)";
+            feedbackDiv.innerHTML = `❌ 答錯囉！<br><span style="color:#555; font-size:1rem; margin-top:5px; display:block;">💡 提示：${currentQuestion.tip}</span>`;
+            
+            if(!mistakes.includes(currentQuestion.id)) {
+                mistakes.push(currentQuestion.id);
+                localStorage.setItem('kk_mistakes_v3', JSON.stringify(mistakes));
+            }
+        }
+        
+        updateUI();
+        nextBtn.style.display = "block";
+    }
+
+    function toggleMistakeMode() {
+        isMistakeMode = !isMistakeMode;
+        if(isMistakeMode) {
+            if(mistakes.length === 0) {
+                alert("太厲害了！你的錯題本目前是空的喔！");
+                isMistakeMode = false;
+                return;
+            }
+            currentPool = allQuestions.filter(q => mistakes.includes(q.id));
+        } else {
+            currentPool = [...allQuestions];
+        }
+        nextQuestion();
+    }
+
+    loadData();
+</script>
+
+</body>
+</html>

@@ -70,12 +70,15 @@
         .diff-norm { background-color: #F1C40F; }
         .diff-hard { background-color: #E74C3C; }
         
-        #game-board { width: 100%; height: 350px; background-color: #2c3e50; border-radius: 15px; position: relative; overflow: hidden; margin-bottom: 15px; border: 4px solid var(--game); touch-action: none;}
+        /* 增加遊戲區高度至 400px 給予更多反應時間 */
+        #game-board { width: 100%; height: 400px; background-color: #2c3e50; border-radius: 15px; position: relative; overflow: hidden; margin-bottom: 15px; border: 4px solid var(--game); touch-action: none;}
         
-        /* 修改這行：拔除 transform，改用絕對 left 座標來防止抖動 */
-        #game-player { position: absolute; bottom: 10px; left: 0px; background-color: #fff; border: 3px solid var(--game); padding: 5px 15px; border-radius: 20px; font-size: 22px; font-weight: bold; color: var(--game); white-space: nowrap; box-shadow: 0 4px 8px rgba(0,0,0,0.3); pointer-events: none;}
+        /* 縮小玩家籃子的 padding 與字體，方便閃避 */
+        #game-player { position: absolute; bottom: 10px; left: 0px; background-color: #fff; border: 3px solid var(--game); padding: 3px 10px; border-radius: 20px; font-size: 18px; font-weight: bold; color: var(--game); white-space: nowrap; box-shadow: 0 4px 8px rgba(0,0,0,0.3); pointer-events: none;}
         
-        .falling-item { position: absolute; background-color: #FFF9C4; color: #F57F17; border: 2px dashed #FBC02D; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3); pointer-events: none;}
+        /* 縮小掉落物的尺寸為 40px，字體 16px */
+        .falling-item { position: absolute; background-color: #FFF9C4; color: #F57F17; border: 2px dashed #FBC02D; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3); pointer-events: none;}
+        
         #game-msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 50px; font-weight: bold; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); display: none; z-index: 10;}
         
         .review-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
@@ -174,7 +177,7 @@
         <div id="exam-result" style="display:none;"></div>
     </div>
 
-    <!-- ================= 6. 遊戲區 (字母接接樂) ================= -->
+    <!-- ================= 6. 遊戲區 ================= -->
     <div id="section-game" class="section">
         <h3 style="color: var(--game); margin-top:0;">🎮 字母接接樂</h3>
         
@@ -191,7 +194,6 @@
                 <span id="game-progress-ui">進度: 1/20</span>
             </div>
             
-            <!-- 【修改重點1】這裡只保留中文，拿掉音標了！ -->
             <h4 style="margin:0 0 10px 0; color:var(--text); font-size:24px;" id="game-target-trans">-</h4>
             
             <div id="game-board">
@@ -211,7 +213,6 @@
     // ==========================================
     // 0. 全域設定與資料載入
     // ==========================================
-    // 這是您目前綁定的題庫網址
     const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUPZngQPLg7_HcY10pPZjJNJuAHyCofcX5E8_aUZaIcnwZRWVJscyV5qFb9naoqSGknUkzkfIeXA5P/pub?output=csv"; 
 
     let allQuestions = [];
@@ -228,11 +229,15 @@
     let examQuestions = []; let currentExamIdx = 0; let currentExamMistakes = [];
     let isExamReviewMode = false; let examLocked = false;
 
-    // 遊戲狀態
+    // 遊戲狀態 (強制統一掉落 4 個選項，速度統一為 2.0)
     let gameLoopId; let isGamePaused = false;
     let gameQuestions = []; let gameQIndex = 0; let gameScore = 0; let gameMistakes = [];
     let activeBlocks = []; let playerX = 150; 
-    let gameConfig = { easy: {blanks:2, opts:4, speed:2.0}, normal: {blanks:3, opts:5, speed:3.0}, hard: {blanks:4, opts:5, speed:4.0} };
+    let gameConfig = { 
+        easy: {blanks:2, opts:4, speed:2.0}, 
+        normal: {blanks:3, opts:4, speed:2.0}, 
+        hard: {blanks:4, opts:4, speed:2.0} 
+    };
     let currentDiff = 'easy';
     let controlsInitialized = false;
     let keys = { left: false, right: false };
@@ -242,7 +247,6 @@
             const response = await fetch(CSV_URL);
             const csvText = await response.text();
             
-            // CSV 解析
             const rows = csvText.split('\n').map(row => {
                 let r = [], cur = '', inQuote = false;
                 for(let i=0; i<row.length; i++){
@@ -266,7 +270,6 @@
                     };
                     allQuestions.push(q);
 
-                    // 自動分類到遊戲題庫 (濾掉有空格的片語)
                     let cleanWord = word.replace(/[^a-zA-Z]/g, '');
                     let len = cleanWord.length;
                     if(len > 0 && len === word.length) {
@@ -297,7 +300,7 @@
         document.getElementById(`section-${tabName}`).classList.add('active');
         document.getElementById('globalScoreBoard').style.display = (tabName === 'exam' || tabName === 'game') ? 'none' : 'flex';
         
-        if(tabName !== 'game') quitGame(); // 離開頁籤就停止遊戲
+        if(tabName !== 'game') quitGame(); 
     }
 
     function speakWord(word, btnId) {
@@ -345,7 +348,7 @@
     function showExamResult() { document.getElementById('exam-content').style.display='none'; let res=document.getElementById('exam-result'); res.style.display='block'; let tot=examQuestions.length; let wr=currentExamMistakes.length; let cor=tot-wr; let sc=Math.round((cor/tot)*100); let html=`<h2 style="color:var(--exam);">測驗結束！</h2><div style="font-size:60px; font-weight:bold; margin:10px 0; color:${sc>=80?'var(--success)':'var(--error)'};">${sc} 分</div><p style="color:#666;font-weight:bold;">答對 ${cor} / ${tot} 題</p>`; if(wr>0){html+=`<div style="background:#fff3cd; padding:15px; border-radius:10px; margin:20px 0; color:#d68910;">尚有 <b>${wr}</b> 題需加強！</div><button class="submit-btn" style="background:#e67e22;" onclick="startExamReview()">錯題覆測</button>`;}else{html+=`<div style="color:var(--success);font-weight:bold;font-size:1.5rem;margin:20px 0;">🌟 完全制霸！</div>`;} html+=`<br><button class="action-btn" style="background:#95a5a6; margin-top:20px; width:80%; padding:15px;" onclick="resetExamUI()">回大考首頁</button>`; res.innerHTML=html; }
 
     // ==========================================
-    // 6. 字母接接樂 (遊戲引擎 - 已除錯版)
+    // 6. 字母接接樂 (尺寸優化與統一設定版)
     // ==========================================
     function startGame(diff) {
         if(vocabDb[diff].length === 0) { alert("此難度題庫數量不足！請先擴充單字。"); return; }
@@ -360,13 +363,10 @@
         let playArea = document.getElementById('game-play');
         playArea.style.display = 'block';
         
-        // 【修正重點1】強制重繪畫面，確保 board 抓得到真實寬度
         let board = document.getElementById('game-board');
         board.offsetWidth; 
 
         initGameControls(); 
-        
-        // 初始置中
         playerX = (board.clientWidth - document.getElementById('game-player').clientWidth) / 2;
         
         loadNextGameQ();
@@ -394,8 +394,6 @@
 
         document.getElementById('game-score-ui').innerText = `分數: ${gameScore}`;
         document.getElementById('game-progress-ui').innerText = `進度: ${gameQIndex+1}/20`;
-        
-        // 【修正重點2】只顯示純中文，拔掉音標
         document.getElementById('game-target-trans').innerText = `${q.trans}`;
         
         let wordArr = q.word.split('');
@@ -418,7 +416,8 @@
         
         let opts = [correctStr];
         const chars = 'abcdefghijklmnopqrstuvwxyz';
-        while(opts.length < conf.opts) {
+        // 固定產生 4 個選項
+        while(opts.length < 4) {
             let wr = ''; for(let i=0; i<conf.blanks; i++) wr += chars.charAt(Math.floor(Math.random()*chars.length));
             if(!opts.includes(wr)) opts.push(wr);
         }
@@ -426,16 +425,16 @@
 
         let board = document.getElementById('game-board');
         let bW = board.clientWidth || 300;
-        let laneW = bW / conf.opts;
+        let laneW = bW / 4; // 均分 4 等分
         
         opts.forEach((o, i) => {
             let el = document.createElement('div');
             el.className = 'falling-item';
             el.innerText = o;
             board.appendChild(el);
-            // 確保產生座標為正數
-            let startX = (i * laneW) + (Math.random() * Math.max(0, laneW - 50));
-            let startY = -60 - (Math.random() * 150);
+            // 控制在各自的軌道掉落，預留寬度防止超出
+            let startX = (i * laneW) + (Math.random() * Math.max(0, laneW - 40));
+            let startY = -40 - (Math.random() * 150);
             activeBlocks.push({ el: el, x: startX, y: startY, text: o });
         });
 
@@ -451,7 +450,6 @@
             let pWidth = playerEl.clientWidth;
             let bWidth = board.clientWidth;
 
-            // 【修正重點3】鍵盤控制邏輯
             if (keys.left) playerX -= 6;
             if (keys.right) playerX += 6;
             if (playerX < 0) playerX = 0;
@@ -469,12 +467,10 @@
                 
                 let itemRect = blk.el.getBoundingClientRect();
 
-                // 碰撞偵測
                 if(pRect.left < itemRect.right && pRect.right > itemRect.left && pRect.top < itemRect.bottom && pRect.bottom > itemRect.top) {
                     handleGameCollision(blk.text); break;
                 }
 
-                // 【修正重點4】安全落底重置 (不再依賴 getBoundingClientRect，改用相對坐標)
                 if(blk.y > board.clientHeight) { blk.y = -60 - (Math.random()*100); }
             }
         }
@@ -513,7 +509,8 @@
         let res = document.getElementById('game-result');
         res.style.display = 'block';
         
-        let html = `<h2 style="color:var(--game);">遊戲結束！</h2><div style="font-size:60px; font-weight:bold; margin:10px 0; color:var(--game);">${gameScore} 分</div>`;
+        let html = `<h2 style="color:var(--game);">遊戲結束！</h2>
+                    <div style="font-size:60px; font-weight:bold; margin:10px 0; color:var(--game);">${gameScore} 分</div>`;
         
         if(gameMistakes.length > 0) {
             let uniqueM = [...new Set(gameMistakes.map(m=>m.word))].map(w=>gameMistakes.find(m=>m.word===w));
@@ -528,7 +525,6 @@
         res.innerHTML = html;
     }
 
-    // 【修正重點5】確保綁定事件不重複，且支援鍵盤
     function initGameControls() {
         if(controlsInitialized) return;
         controlsInitialized = true;
@@ -552,7 +548,7 @@
             let w = playerEl.clientWidth;
             if(x < w/2) x = w/2;
             if(x > rect.width - w/2) x = rect.width - w/2;
-            playerX = x - (w/2); // 計算真實 CSS left 距離
+            playerX = x - (w/2); 
         }
 
         board.addEventListener('touchstart', (e) => { e.preventDefault(); isDragging=true; updatePlayerPos(e.touches[0].clientX); }, {passive: false});
@@ -565,7 +561,6 @@
         board.addEventListener('mouseleave', () => isDragging=false);
     }
 
-    // 初始化啟動
     loadData();
 
 </script>

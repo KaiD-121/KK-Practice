@@ -8,7 +8,7 @@
         :root { --primary: #4A90E2; --secondary: #f39c12; --vocab: #9b59b6; --spell: #1abc9c; --exam: #e67e22; --game: #e84393; --bg: #F5F7FA; --card: #FFFFFF; --text: #333333; --error: #E74C3C; --success: #2ECC71;}
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); text-align: center; padding: 0; margin: 0; touch-action: manipulation;}
         
-        /* 導覽列 (Tabs) - 自動換行 */
+        /* 導覽列 (Tabs) */
         .tabs { display: flex; flex-wrap: wrap; justify-content: center; background-color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; position: sticky; top: 0; z-index: 100;}
         .tab-btn { flex: 1 1 30%; padding: 12px 2px; font-size: 0.9rem; font-weight: bold; border: none; background: none; cursor: pointer; color: #888; border-bottom: 4px solid transparent; transition: 0.3s;}
         .tab-btn.active.tab-fc { color: var(--primary); border-bottom: 4px solid var(--primary); }
@@ -71,8 +71,12 @@
         .diff-hard { background-color: #E74C3C; }
         
         #game-board { width: 100%; height: 350px; background-color: #2c3e50; border-radius: 15px; position: relative; overflow: hidden; margin-bottom: 15px; border: 4px solid var(--game); touch-action: none;}
-        #game-player { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background-color: #fff; border: 3px solid var(--game); padding: 5px 15px; border-radius: 20px; font-size: 22px; font-weight: bold; color: var(--game); white-space: nowrap; box-shadow: 0 4px 8px rgba(0,0,0,0.3); pointer-events: none;}
+        
+        /* 修改這行：拔除 transform，改用絕對 left 座標來防止抖動 */
+        #game-player { position: absolute; bottom: 10px; left: 0px; background-color: #fff; border: 3px solid var(--game); padding: 5px 15px; border-radius: 20px; font-size: 22px; font-weight: bold; color: var(--game); white-space: nowrap; box-shadow: 0 4px 8px rgba(0,0,0,0.3); pointer-events: none;}
+        
         .falling-item { position: absolute; background-color: #FFF9C4; color: #F57F17; border: 2px dashed #FBC02D; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3); pointer-events: none;}
+        #game-msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 50px; font-weight: bold; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); display: none; z-index: 10;}
         
         .review-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
         .review-correct { font-weight: bold; color: var(--error); font-size: 1.1rem; }
@@ -105,20 +109,20 @@
             <div class="flashcard" id="flashcard">
                 <div class="card-face card-front">
                     <div class="card-cat" id="fc-cat">母音</div>
-                    <h1 class="card-target" id="fc-target">[æ]</h1>
-                    <div class="card-word" id="fc-word">apple</div>
-                    <div class="card-kk-trans" id="fc-kk-trans">[ˋæp!] - 蘋果</div>
+                    <h1 class="card-target" id="fc-target">-</h1>
+                    <div class="card-word" id="fc-word">-</div>
+                    <div class="card-kk-trans" id="fc-kk-trans">-</div>
                 </div>
                 <div class="card-face card-back">
                     <div class="card-back-title">👄 發音口型要點</div>
-                    <div class="card-tip" id="fc-tip">蝴蝶音：下巴向下大幅拉開。</div>
+                    <div class="card-tip" id="fc-tip">-</div>
                 </div>
             </div>
         </div>
         <button class="play-btn" onclick="playAudioCurrentCard()">🔊</button>
         <div class="nav-btns">
             <button class="nav-btn" onclick="prevCard()">⬅️ 上一個</button>
-            <span style="line-height: 40px; color: #888;" id="fc-counter">1 / ?</span>
+            <span style="line-height: 40px; color: #888;" id="fc-counter">0 / 0</span>
             <button class="nav-btn" onclick="nextCard()">下一個 ➡️</button>
         </div>
     </div>
@@ -160,8 +164,8 @@
         <div id="exam-intro">
             <div style="background:#fef5e7; padding:20px; border-radius:15px; border:2px solid #fdebd0; margin-bottom:20px;">
                 <h4 style="margin-top:0; color:var(--exam); font-size:1.2rem;">📋 測驗說明</h4>
-                <p style="text-align:left; margin-bottom:8px;">1. <b>聽音辨位：</b> 10題</p>
-                <p style="text-align:left; margin-bottom:8px;">2. <b>拼字特訓：</b> 30題</p>
+                <p style="text-align:left; margin-bottom:8px;">1. <b>聽音辨位：</b> 10題 (選出單字對應的KK音標)</p>
+                <p style="text-align:left; margin-bottom:8px;">2. <b>拼字特訓：</b> 30題 (聽音頻看中文，拼出英文單字)</p>
                 <p style="text-align:left; margin-bottom:0; color:var(--error);"><b>滿分 100 分。考後將開啟錯題覆測！</b></p>
             </div>
             <button class="submit-btn" style="background-color:var(--exam);" onclick="startExam()">🚀 立即開始挑戰</button>
@@ -175,7 +179,7 @@
         <h3 style="color: var(--game); margin-top:0;">🎮 字母接接樂</h3>
         
         <div id="game-intro">
-            <p style="margin-bottom:20px; color:#666;">手指在藍色畫布上左右滑動，接住落下的字母！<br>每次挑戰 20 題。</p>
+            <p style="margin-bottom:20px; color:#666;">手指左右滑動(或鍵盤左右鍵)，接住落下的字母！<br>每次挑戰 20 題。</p>
             <button class="diff-btn diff-easy" onclick="startGame('easy')">🟢 簡單 (4個字母內單字)</button>
             <button class="diff-btn diff-norm" onclick="startGame('normal')">🟡 普通 (5~6個字母單字)</button>
             <button class="diff-btn diff-hard" onclick="startGame('hard')">🔴 困難 (7個字母以上單字)</button>
@@ -186,9 +190,12 @@
                 <span id="game-score-ui">分數: 0</span>
                 <span id="game-progress-ui">進度: 1/20</span>
             </div>
-            <h4 style="margin:0 0 10px 0; color:var(--text); font-size:20px;" id="game-target-trans">-</h4>
+            
+            <!-- 【修改重點1】這裡只保留中文，拿掉音標了！ -->
+            <h4 style="margin:0 0 10px 0; color:var(--text); font-size:24px;" id="game-target-trans">-</h4>
             
             <div id="game-board">
+                <div id="game-msg">✅</div>
                 <div id="game-player">t__e</div>
             </div>
             
@@ -204,6 +211,7 @@
     // ==========================================
     // 0. 全域設定與資料載入
     // ==========================================
+    // 這是您目前綁定的題庫網址
     const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUPZngQPLg7_HcY10pPZjJNJuAHyCofcX5E8_aUZaIcnwZRWVJscyV5qFb9naoqSGknUkzkfIeXA5P/pub?output=csv"; 
 
     let allQuestions = [];
@@ -224,15 +232,17 @@
     let gameLoopId; let isGamePaused = false;
     let gameQuestions = []; let gameQIndex = 0; let gameScore = 0; let gameMistakes = [];
     let activeBlocks = []; let playerX = 150; 
-    let gameConfig = { easy: {blanks:2, opts:4, speed:2.5}, normal: {blanks:3, opts:5, speed:3.5}, hard: {blanks:4, opts:5, speed:4.5} };
+    let gameConfig = { easy: {blanks:2, opts:4, speed:2.0}, normal: {blanks:3, opts:5, speed:3.0}, hard: {blanks:4, opts:5, speed:4.0} };
     let currentDiff = 'easy';
+    let controlsInitialized = false;
+    let keys = { left: false, right: false };
 
     async function loadData() {
         try {
             const response = await fetch(CSV_URL);
             const csvText = await response.text();
             
-            // 安全的 CSV 拆分方法
+            // CSV 解析
             const rows = csvText.split('\n').map(row => {
                 let r = [], cur = '', inQuote = false;
                 for(let i=0; i<row.length; i++){
@@ -256,7 +266,7 @@
                     };
                     allQuestions.push(q);
 
-                    // 自動分類到遊戲題庫 (過濾掉有空格的片語，只取純字母單字)
+                    // 自動分類到遊戲題庫 (濾掉有空格的片語)
                     let cleanWord = word.replace(/[^a-zA-Z]/g, '');
                     let len = cleanWord.length;
                     if(len > 0 && len === word.length) {
@@ -287,7 +297,7 @@
         document.getElementById(`section-${tabName}`).classList.add('active');
         document.getElementById('globalScoreBoard').style.display = (tabName === 'exam' || tabName === 'game') ? 'none' : 'flex';
         
-        if(tabName !== 'game') quitGame(); // 切換分頁時停止遊戲迴圈
+        if(tabName !== 'game') quitGame(); // 離開頁籤就停止遊戲
     }
 
     function speakWord(word, btnId) {
@@ -335,22 +345,34 @@
     function showExamResult() { document.getElementById('exam-content').style.display='none'; let res=document.getElementById('exam-result'); res.style.display='block'; let tot=examQuestions.length; let wr=currentExamMistakes.length; let cor=tot-wr; let sc=Math.round((cor/tot)*100); let html=`<h2 style="color:var(--exam);">測驗結束！</h2><div style="font-size:60px; font-weight:bold; margin:10px 0; color:${sc>=80?'var(--success)':'var(--error)'};">${sc} 分</div><p style="color:#666;font-weight:bold;">答對 ${cor} / ${tot} 題</p>`; if(wr>0){html+=`<div style="background:#fff3cd; padding:15px; border-radius:10px; margin:20px 0; color:#d68910;">尚有 <b>${wr}</b> 題需加強！</div><button class="submit-btn" style="background:#e67e22;" onclick="startExamReview()">錯題覆測</button>`;}else{html+=`<div style="color:var(--success);font-weight:bold;font-size:1.5rem;margin:20px 0;">🌟 完全制霸！</div>`;} html+=`<br><button class="action-btn" style="background:#95a5a6; margin-top:20px; width:80%; padding:15px;" onclick="resetExamUI()">回大考首頁</button>`; res.innerHTML=html; }
 
     // ==========================================
-    // 6. 字母接接樂 (遊戲引擎)
+    // 6. 字母接接樂 (遊戲引擎 - 已除錯版)
     // ==========================================
     function startGame(diff) {
-        if(vocabDb[diff].length === 0) { alert("此難度題庫數量不足！請先在 Google Sheets 擴充單字。"); return; }
+        if(vocabDb[diff].length === 0) { alert("此難度題庫數量不足！請先擴充單字。"); return; }
         currentDiff = diff; gameScore = 0; gameQIndex = 0; gameMistakes = [];
         
         let shuffled = [...vocabDb[diff]].sort(() => 0.5 - Math.random());
-        gameQuestions = shuffled.slice(0, 20); // 取 20 題
+        gameQuestions = shuffled.slice(0, 20);
 
         document.getElementById('game-intro').style.display = 'none';
         document.getElementById('game-result').style.display = 'none';
-        document.getElementById('game-play').style.display = 'block';
+        
+        let playArea = document.getElementById('game-play');
+        playArea.style.display = 'block';
+        
+        // 【修正重點1】強制重繪畫面，確保 board 抓得到真實寬度
+        let board = document.getElementById('game-board');
+        board.offsetWidth; 
 
-        initGameControls();
+        initGameControls(); 
+        
+        // 初始置中
+        playerX = (board.clientWidth - document.getElementById('game-player').clientWidth) / 2;
+        
         loadNextGameQ();
         isGamePaused = false;
+        
+        cancelAnimationFrame(gameLoopId);
         gameLoopId = requestAnimationFrame(updateGame);
     }
 
@@ -372,9 +394,10 @@
 
         document.getElementById('game-score-ui').innerText = `分數: ${gameScore}`;
         document.getElementById('game-progress-ui').innerText = `進度: ${gameQIndex+1}/20`;
-        document.getElementById('game-target-trans').innerText = `${q.trans}  ${q.kk}`;
         
-        // 挖空邏輯
+        // 【修正重點2】只顯示純中文，拔掉音標
+        document.getElementById('game-target-trans').innerText = `${q.trans}`;
+        
         let wordArr = q.word.split('');
         let indices = [];
         while(indices.length < conf.blanks && indices.length < wordArr.length) {
@@ -393,7 +416,6 @@
         playerEl.style.color = 'var(--game)';
         document.getElementById('game-msg').style.display = 'none';
         
-        // 產生選項
         let opts = [correctStr];
         const chars = 'abcdefghijklmnopqrstuvwxyz';
         while(opts.length < conf.opts) {
@@ -402,9 +424,8 @@
         }
         opts.sort(()=>0.5-Math.random());
 
-        // 建立掉落物
         let board = document.getElementById('game-board');
-        let bW = board.clientWidth;
+        let bW = board.clientWidth || 300;
         let laneW = bW / conf.opts;
         
         opts.forEach((o, i) => {
@@ -412,7 +433,8 @@
             el.className = 'falling-item';
             el.innerText = o;
             board.appendChild(el);
-            let startX = (i * laneW) + (Math.random() * (laneW - 50));
+            // 確保產生座標為正數
+            let startX = (i * laneW) + (Math.random() * Math.max(0, laneW - 50));
             let startY = -60 - (Math.random() * 150);
             activeBlocks.push({ el: el, x: startX, y: startY, text: o });
         });
@@ -426,10 +448,18 @@
             let board = document.getElementById('game-board');
             let playerEl = document.getElementById('game-player');
             let conf = gameConfig[currentDiff];
-            let pRect = playerEl.getBoundingClientRect();
-            let bRect = board.getBoundingClientRect();
+            let pWidth = playerEl.clientWidth;
+            let bWidth = board.clientWidth;
+
+            // 【修正重點3】鍵盤控制邏輯
+            if (keys.left) playerX -= 6;
+            if (keys.right) playerX += 6;
+            if (playerX < 0) playerX = 0;
+            if (playerX > bWidth - pWidth) playerX = bWidth - pWidth;
 
             playerEl.style.left = playerX + 'px';
+
+            let pRect = playerEl.getBoundingClientRect();
 
             for(let i=0; i<activeBlocks.length; i++) {
                 let blk = activeBlocks[i];
@@ -444,8 +474,8 @@
                     handleGameCollision(blk.text); break;
                 }
 
-                // 掉出底端重新從上面掉
-                if(itemRect.top > bRect.bottom) { blk.y = -60 - (Math.random()*100); }
+                // 【修正重點4】安全落底重置 (不再依賴 getBoundingClientRect，改用相對坐標)
+                if(blk.y > board.clientHeight) { blk.y = -60 - (Math.random()*100); }
             }
         }
         if(document.getElementById('section-game').classList.contains('active')) {
@@ -483,8 +513,7 @@
         let res = document.getElementById('game-result');
         res.style.display = 'block';
         
-        let html = `<h2 style="color:var(--game);">遊戲結束！</h2>
-                    <div style="font-size:60px; font-weight:bold; margin:10px 0; color:var(--game);">${gameScore} 分</div>`;
+        let html = `<h2 style="color:var(--game);">遊戲結束！</h2><div style="font-size:60px; font-weight:bold; margin:10px 0; color:var(--game);">${gameScore} 分</div>`;
         
         if(gameMistakes.length > 0) {
             let uniqueM = [...new Set(gameMistakes.map(m=>m.word))].map(w=>gameMistakes.find(m=>m.word===w));
@@ -499,11 +528,32 @@
         res.innerHTML = html;
     }
 
-    // 觸控拖曳綁定
+    // 【修正重點5】確保綁定事件不重複，且支援鍵盤
     function initGameControls() {
+        if(controlsInitialized) return;
+        controlsInitialized = true;
+
         let board = document.getElementById('game-board');
         let playerEl = document.getElementById('game-player');
+
+        window.addEventListener('keydown', (e) => {
+            if(e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') keys.left = true;
+            if(e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') keys.right = true;
+        });
+        window.addEventListener('keyup', (e) => {
+            if(e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') keys.left = false;
+            if(e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') keys.right = false;
+        });
+
         let isDragging = false;
+        function updatePlayerPos(clientX) {
+            let rect = board.getBoundingClientRect();
+            let x = clientX - rect.left;
+            let w = playerEl.clientWidth;
+            if(x < w/2) x = w/2;
+            if(x > rect.width - w/2) x = rect.width - w/2;
+            playerX = x - (w/2); // 計算真實 CSS left 距離
+        }
 
         board.addEventListener('touchstart', (e) => { e.preventDefault(); isDragging=true; updatePlayerPos(e.touches[0].clientX); }, {passive: false});
         board.addEventListener('touchmove', (e) => { e.preventDefault(); if(isDragging) updatePlayerPos(e.touches[0].clientX); }, {passive: false});
@@ -512,16 +562,7 @@
         board.addEventListener('mousedown', (e) => { isDragging=true; updatePlayerPos(e.clientX); });
         window.addEventListener('mousemove', (e) => { if(isDragging) updatePlayerPos(e.clientX); });
         window.addEventListener('mouseup', () => isDragging=false);
-
-        function updatePlayerPos(clientX) {
-            let rect = board.getBoundingClientRect();
-            let x = clientX - rect.left;
-            let w = playerEl.clientWidth;
-            if(x < w/2) x = w/2;
-            if(x > rect.width - w/2) x = rect.width - w/2;
-            playerX = x;
-        }
-        playerX = board.clientWidth / 2; // 置中
+        board.addEventListener('mouseleave', () => isDragging=false);
     }
 
     // 初始化啟動

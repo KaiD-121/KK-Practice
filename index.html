@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KK音標與單字全方位特訓 APP</title>
+    <title>KK音標與單字文法全方位特訓 APP</title>
     <style>
-        :root { --primary: #4A90E2; --secondary: #f39c12; --vocab: #9b59b6; --spell: #1abc9c; --exam: #e67e22; --game: #e84393; --bg: #F5F7FA; --card: #FFFFFF; --text: #333333; --error: #E74C3C; --success: #2ECC71;}
+        :root { --primary: #4A90E2; --secondary: #f39c12; --vocab: #9b59b6; --spell: #1abc9c; --exam: #e67e22; --game: #e84393; --grammar: #8e44ad; --bg: #F5F7FA; --card: #FFFFFF; --text: #333333; --error: #E74C3C; --success: #2ECC71;}
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); text-align: center; padding: 0; margin: 0; touch-action: manipulation;}
         
-        /* 導覽列 (Tabs) */
+        /* 導覽列 (Tabs) - 支援 7 個按鈕自動換行 */
         .tabs { display: flex; flex-wrap: wrap; justify-content: center; background-color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; position: sticky; top: 0; z-index: 100;}
-        .tab-btn { flex: 1 1 30%; padding: 12px 2px; font-size: 0.9rem; font-weight: bold; border: none; background: none; cursor: pointer; color: #888; border-bottom: 4px solid transparent; transition: 0.3s;}
+        .tab-btn { flex: 1 1 24%; padding: 12px 2px; font-size: 0.9rem; font-weight: bold; border: none; background: none; cursor: pointer; color: #888; border-bottom: 4px solid transparent; transition: 0.3s;}
         .tab-btn.active.tab-fc { color: var(--primary); border-bottom: 4px solid var(--primary); }
         .tab-btn.active.tab-qz { color: var(--secondary); border-bottom: 4px solid var(--secondary); }
         .tab-btn.active.tab-vc { color: var(--vocab); border-bottom: 4px solid var(--vocab); }
         .tab-btn.active.tab-sp { color: var(--spell); border-bottom: 4px solid var(--spell); }
         .tab-btn.active.tab-ex { color: var(--exam); border-bottom: 4px solid var(--exam); }
         .tab-btn.active.tab-gm { color: var(--game); border-bottom: 4px solid var(--game); }
+        .tab-btn.active.tab-gr { color: var(--grammar); border-bottom: 4px solid var(--grammar); }
 
         #app-container { max-width: 500px; margin: 0 auto; background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .section { display: none; }
@@ -48,6 +49,10 @@
         .play-btn { font-size: 40px; background: none; border: none; cursor: pointer; margin: 10px 0; transition: transform 0.1s; display: inline-flex; justify-content: center; align-items: center; width: 70px; height: 70px; border-radius: 50%; background-color: #e3f2fd; color: var(--primary); }
         .play-btn:active { transform: scale(0.9); }
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        
+        /* 文法區專用直列排版 */
+        .options-col { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+
         .opt-btn { padding: 15px 10px; font-size: 24px; font-weight: bold; border: 2px solid #e0e0e0; background: white; color: var(--text); border-radius: 15px; cursor: pointer; transition: all 0.2s; word-break: break-word;}
         .opt-btn:hover { border-color: var(--primary); background-color: #f8fbff; }
         .opt-btn.correct { background-color: var(--success); color: white; border-color: var(--success); pointer-events: none;}
@@ -64,30 +69,21 @@
         .feedback { min-height: 60px; margin: 15px 0; font-size: 1.1rem; line-height: 1.5; font-weight: 500; }
         .next-btn { background-color: var(--primary); padding: 15px 20px; font-size: 1.2rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; display: none; width: 100%; transition: 0.2s;}
 
-        /* ================= 遊戲區專屬樣式 ================= */
+        /* 遊戲區樣式 */
         .diff-btn { width: 100%; padding: 15px; font-size: 1.2rem; font-weight: bold; border-radius: 10px; border: none; color: white; cursor: pointer; margin-bottom: 15px; transition: 0.2s;}
         .diff-easy { background-color: #2ECC71; }
         .diff-norm { background-color: #F1C40F; }
         .diff-hard { background-color: #E74C3C; }
-        
-        /* 增加遊戲區高度至 400px 給予更多反應時間 */
         #game-board { width: 100%; height: 400px; background-color: #2c3e50; border-radius: 15px; position: relative; overflow: hidden; margin-bottom: 15px; border: 4px solid var(--game); touch-action: none;}
-        
-        /* 縮小玩家籃子的 padding 與字體，方便閃避 */
         #game-player { position: absolute; bottom: 10px; left: 0px; background-color: #fff; border: 3px solid var(--game); padding: 3px 10px; border-radius: 20px; font-size: 18px; font-weight: bold; color: var(--game); white-space: nowrap; box-shadow: 0 4px 8px rgba(0,0,0,0.3); pointer-events: none;}
-        
-        /* 縮小掉落物的尺寸為 40px，字體 16px */
         .falling-item { position: absolute; background-color: #FFF9C4; color: #F57F17; border: 2px dashed #FBC02D; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3); pointer-events: none;}
-        
         #game-msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 50px; font-weight: bold; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); display: none; z-index: 10;}
-        
         .review-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
         .review-correct { font-weight: bold; color: var(--error); font-size: 1.1rem; }
     </style>
 </head>
 <body>
 
-<!-- 頂部頁籤切換 -->
 <div class="tabs">
     <button class="tab-btn tab-fc active" onclick="switchTab('flashcard')">📚 圖鑑</button>
     <button class="tab-btn tab-qz" onclick="switchTab('quiz')">🎧 辨音</button>
@@ -95,6 +91,7 @@
     <button class="tab-btn tab-sp" onclick="switchTab('spell')">✍️ 拼字</button>
     <button class="tab-btn tab-ex" onclick="switchTab('exam')">📝 大考</button>
     <button class="tab-btn tab-gm" onclick="switchTab('game')">🎮 遊戲</button>
+    <button class="tab-btn tab-gr" onclick="switchTab('grammar')">💡 文法</button>
 </div>
 
 <div id="app-container">
@@ -105,7 +102,7 @@
         <span>🔥 持續練習</span>
     </div>
 
-    <!-- ================= 1. 圖鑑 ================= -->
+    <!-- 1. 圖鑑 -->
     <div id="section-flashcard" class="section active">
         <h3 style="color: #666; margin-top:0;">點擊卡片看發音口型</h3>
         <div class="flashcard-container" onclick="flipCard()">
@@ -130,7 +127,7 @@
         </div>
     </div>
 
-    <!-- ================= 2. 辨音 ================= -->
+    <!-- 2. 辨音 -->
     <div id="section-quiz" class="section">
         <h3 style="color: var(--secondary); margin-top:0;">聽音頻，選出正確的音標</h3>
         <div class="quiz-word-box"><h2 class="quiz-word" id="qz-word">-</h2><div class="quiz-trans" id="qz-trans">-</div></div>
@@ -140,7 +137,7 @@
         <button class="next-btn" style="background-color:var(--secondary);" id="nextBtn-quiz" onclick="nextQuizQuestion()">下一題 ➔</button>
     </div>
 
-    <!-- ================= 3. 單字 ================= -->
+    <!-- 3. 單字 -->
     <div id="section-vocab" class="section">
         <h3 style="color: var(--vocab); margin-top:0;">聽音看單字，選正確中文</h3>
         <div class="quiz-word-box" style="border-color:#e8daef; background:#fdfefe;"><h2 class="quiz-word" id="vc-word">-</h2><div class="quiz-trans" id="vc-kk">-</div></div>
@@ -150,7 +147,7 @@
         <button class="next-btn" style="background-color:var(--vocab);" id="nextBtn-vocab" onclick="nextVocabQuestion()">下一題 ➔</button>
     </div>
 
-    <!-- ================= 4. 拼字 ================= -->
+    <!-- 4. 拼字 -->
     <div id="section-spell" class="section">
         <h3 style="color: var(--spell); margin-top:0;">聽音頻看中文，拼出英文單字</h3>
         <div class="quiz-word-box" style="border-color:#d1f2eb; background:#e8f8f5;"><h2 class="quiz-word" id="sp-trans" style="font-size:32px;">-</h2></div>
@@ -161,15 +158,15 @@
         <button class="next-btn" style="background-color:var(--spell);" id="nextBtn-spell" onclick="nextSpellQuestion()">下一題 ➔</button>
     </div>
 
-    <!-- ================= 5. 模擬大考 ================= -->
+    <!-- 5. 模擬大考 -->
     <div id="section-exam" class="section">
         <h3 style="color: var(--exam); margin-top:0;">🏆 模擬大考中心</h3>
         <div id="exam-intro">
             <div style="background:#fef5e7; padding:20px; border-radius:15px; border:2px solid #fdebd0; margin-bottom:20px;">
                 <h4 style="margin-top:0; color:var(--exam); font-size:1.2rem;">📋 測驗說明</h4>
-                <p style="text-align:left; margin-bottom:8px;">1. <b>聽音辨位：</b> 10題 (選出單字對應的KK音標)</p>
-                <p style="text-align:left; margin-bottom:8px;">2. <b>拼字特訓：</b> 30題 (聽音頻看中文，拼出英文單字)</p>
-                <p style="text-align:left; margin-bottom:0; color:var(--error);"><b>滿分 100 分。考後將開啟錯題覆測！</b></p>
+                <p style="text-align:left; margin-bottom:8px;">1. <b>聽音辨位：</b> 10題</p>
+                <p style="text-align:left; margin-bottom:8px;">2. <b>拼字特訓：</b> 30題</p>
+                <p style="text-align:left; margin-bottom:0; color:var(--error);"><b>滿分 100 分。考後開啟錯題覆測！</b></p>
             </div>
             <button class="submit-btn" style="background-color:var(--exam);" onclick="startExam()">🚀 立即開始挑戰</button>
         </div>
@@ -177,34 +174,35 @@
         <div id="exam-result" style="display:none;"></div>
     </div>
 
-    <!-- ================= 6. 遊戲區 ================= -->
+    <!-- 6. 遊戲區 -->
     <div id="section-game" class="section">
         <h3 style="color: var(--game); margin-top:0;">🎮 字母接接樂</h3>
-        
         <div id="game-intro">
-            <p style="margin-bottom:20px; color:#666;">手指左右滑動(或鍵盤左右鍵)，接住落下的字母！<br>每次挑戰 20 題。</p>
-            <button class="diff-btn diff-easy" onclick="startGame('easy')">🟢 簡單 (4個字母內單字)</button>
-            <button class="diff-btn diff-norm" onclick="startGame('normal')">🟡 普通 (5~6個字母單字)</button>
-            <button class="diff-btn diff-hard" onclick="startGame('hard')">🔴 困難 (7個字母以上單字)</button>
+            <p style="margin-bottom:20px; color:#666;">手指左右滑動(或鍵盤左右鍵)，接住落下的字母！</p>
+            <button class="diff-btn diff-easy" onclick="startGame('easy')">🟢 簡單 (4個字母內)</button>
+            <button class="diff-btn diff-norm" onclick="startGame('normal')">🟡 普通 (5~6個字母)</button>
+            <button class="diff-btn diff-hard" onclick="startGame('hard')">🔴 困難 (7個字母以上)</button>
         </div>
-        
         <div id="game-play" style="display:none;">
             <div class="score-board" style="background:#fdebd0; color:var(--game); margin-bottom:10px;">
-                <span id="game-score-ui">分數: 0</span>
-                <span id="game-progress-ui">進度: 1/20</span>
+                <span id="game-score-ui">分數: 0</span><span id="game-progress-ui">進度: 1/20</span>
             </div>
-            
             <h4 style="margin:0 0 10px 0; color:var(--text); font-size:24px;" id="game-target-trans">-</h4>
-            
-            <div id="game-board">
-                <div id="game-msg">✅</div>
-                <div id="game-player">t__e</div>
-            </div>
-            
+            <div id="game-board"><div id="game-msg">✅</div><div id="game-player">t__e</div></div>
             <button class="action-btn" style="background:#95a5a6; width:100%; margin-top:15px;" onclick="quitGame()">放棄挑戰</button>
         </div>
-
         <div id="game-result" style="display:none;"></div>
+    </div>
+
+    <!-- 7. 文法測驗 -->
+    <div id="section-grammar" class="section">
+        <h3 style="color: var(--grammar); margin-top:0;">💡 文法選擇題特訓</h3>
+        <div class="quiz-word-box" style="border-color:#d2b4de; background:#f5eef8;">
+            <h3 id="gr-question" style="font-size:22px; text-align:left; line-height:1.5; color:var(--text); margin:0;">-</h3>
+        </div>
+        <div class="options-col" id="grOptionsContainer"></div>
+        <div class="feedback" id="feedback-grammar"></div>
+        <button class="next-btn" style="background-color:var(--grammar);" id="nextBtn-grammar" onclick="nextGrammarQuestion()">下一題 ➔</button>
     </div>
 
 </div>
@@ -213,51 +211,52 @@
     // ==========================================
     // 0. 全域設定與資料載入
     // ==========================================
+    // 單字題庫的 CSV 網址
     const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUPZngQPLg7_HcY10pPZjJNJuAHyCofcX5E8_aUZaIcnwZRWVJscyV5qFb9naoqSGknUkzkfIeXA5P/pub?output=csv"; 
+    // 文法題庫的 CSV 網址
+    const GRAMMAR_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTUPZngQPLg7_HcY10pPZjJNJuAHyCofcX5E8_aUZaIcnwZRWVJscyV5qFb9naoqSGknUkzkfIeXA5P/pub?gid=148913207&single=true&output=csv"; 
 
     let allQuestions = [];
+    let allGrammarQuestions = [];
     let score = 0; 
     let vocabDb = { easy: [], normal: [], hard: [] };
     
-    // 共用狀態
     let currentCardIndex = 0; let isFlipped = false;
     let currentQuiz = null; let optionsLocked = false;
     let currentVocab = null; 
     let currentSpell = null; let optionsLockedSpell = false;
+    let currentGrammar = null; let grammarLocked = false;
 
-    // 大考狀態
     let examQuestions = []; let currentExamIdx = 0; let currentExamMistakes = [];
     let isExamReviewMode = false; let examLocked = false;
 
-    // 遊戲狀態 (強制統一掉落 4 個選項，速度統一為 2.0)
     let gameLoopId; let isGamePaused = false;
     let gameQuestions = []; let gameQIndex = 0; let gameScore = 0; let gameMistakes = [];
     let activeBlocks = []; let playerX = 150; 
-    let gameConfig = { 
-        easy: {blanks:2, opts:4, speed:2.0}, 
-        normal: {blanks:3, opts:4, speed:2.0}, 
-        hard: {blanks:4, opts:4, speed:2.0} 
-    };
-    let currentDiff = 'easy';
-    let controlsInitialized = false;
-    let keys = { left: false, right: false };
+    let gameConfig = { easy:{blanks:2, opts:4, speed:2.0}, normal:{blanks:3, opts:4, speed:2.0}, hard:{blanks:4, opts:4, speed:2.0} };
+    let currentDiff = 'easy'; let controlsInitialized = false; let keys = { left: false, right: false };
+
+    // 安全的 CSV 拆分方法 (處理引號內的逗號)
+    function parseCSV(text) {
+        return text.split('\n').map(row => {
+            let r = [], cur = '', inQuote = false;
+            for(let i=0; i<row.length; i++){
+                let c = row[i];
+                if(c === '"') inQuote = !inQuote;
+                else if(c === ',' && !inQuote){ r.push(cur); cur=''; }
+                else cur += c;
+            }
+            r.push(cur);
+            return r;
+        });
+    }
 
     async function loadData() {
         try {
+            // 1. 載入單字題庫
             const response = await fetch(CSV_URL);
             const csvText = await response.text();
-            
-            const rows = csvText.split('\n').map(row => {
-                let r = [], cur = '', inQuote = false;
-                for(let i=0; i<row.length; i++){
-                    let c = row[i];
-                    if(c === '"') inQuote = !inQuote;
-                    else if(c === ',' && !inQuote){ r.push(cur); cur=''; }
-                    else cur += c;
-                }
-                r.push(cur);
-                return r;
-            });
+            const rows = parseCSV(csvText);
             
             for(let i = 1; i < rows.length; i++) {
                 if(rows[i].length >= 10 && rows[i][3] && rows[i][3].trim() !== "") {
@@ -266,7 +265,7 @@
                         id: rows[i][0], cat: rows[i][1], target: rows[i][2],
                         word: word, kk: rows[i][4], trans: rows[i][5],
                         correct: rows[i][7], options: [rows[i][7], rows[i][8], rows[i][9], rows[i][10]],
-                        tip: (rows[i][11] || "發音要點請留意。").replace(/"/g, '') 
+                        tip: (rows[i][11] || "").replace(/"/g, '') 
                     };
                     allQuestions.push(q);
 
@@ -280,10 +279,36 @@
                 }
             }
             
+            // 2. 載入文法題庫
+            if(GRAMMAR_CSV_URL !== "YOUR_GRAMMAR_CSV_URL_HERE") {
+                try {
+                    const resG = await fetch(GRAMMAR_CSV_URL);
+                    const txtG = await resG.text();
+                    const rowsG = parseCSV(txtG);
+                    for(let i = 1; i < rowsG.length; i++) {
+                        if(rowsG[i].length >= 8 && rowsG[i][1].trim() !== "") {
+                            allGrammarQuestions.push({
+                                id: rowsG[i][0],
+                                question: rowsG[i][1],
+                                options: [rowsG[i][2], rowsG[i][3], rowsG[i][4], rowsG[i][5]],
+                                correct: rowsG[i][6],
+                                exp: rowsG[i][7]
+                            });
+                        }
+                    }
+                } catch(e) { console.log("文法題庫載入失敗或尚未設定"); }
+            }
+
             document.getElementById('loading').style.display = 'none';
             document.getElementById('globalScoreBoard').style.display = 'flex';
             
-            renderFlashcard(); nextQuizQuestion(); nextVocabQuestion(); nextSpellQuestion();
+            // 初始化所有模組的第一題
+            renderFlashcard(); 
+            nextQuizQuestion(); 
+            nextVocabQuestion(); 
+            nextSpellQuestion(); 
+            nextGrammarQuestion();
+
         } catch (error) {
             document.getElementById('loading').innerText = "❌ 載入失敗，請檢查網址。";
             console.error(error);
@@ -293,7 +318,7 @@
     function switchTab(tabName) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         let selector = tabName.substring(0,2);
-        if(tabName==='flashcard') selector='fc'; if(tabName==='quiz') selector='qz'; if(tabName==='vocab') selector='vc'; if(tabName==='spell') selector='sp'; if(tabName==='exam') selector='ex'; if(tabName==='game') selector='gm';
+        if(tabName==='flashcard') selector='fc'; if(tabName==='quiz') selector='qz'; if(tabName==='vocab') selector='vc'; if(tabName==='spell') selector='sp'; if(tabName==='exam') selector='ex'; if(tabName==='game') selector='gm'; if(tabName==='grammar') selector='gr';
         document.querySelector('.tab-'+ selector).classList.add('active');
         
         document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
@@ -348,219 +373,163 @@
     function showExamResult() { document.getElementById('exam-content').style.display='none'; let res=document.getElementById('exam-result'); res.style.display='block'; let tot=examQuestions.length; let wr=currentExamMistakes.length; let cor=tot-wr; let sc=Math.round((cor/tot)*100); let html=`<h2 style="color:var(--exam);">測驗結束！</h2><div style="font-size:60px; font-weight:bold; margin:10px 0; color:${sc>=80?'var(--success)':'var(--error)'};">${sc} 分</div><p style="color:#666;font-weight:bold;">答對 ${cor} / ${tot} 題</p>`; if(wr>0){html+=`<div style="background:#fff3cd; padding:15px; border-radius:10px; margin:20px 0; color:#d68910;">尚有 <b>${wr}</b> 題需加強！</div><button class="submit-btn" style="background:#e67e22;" onclick="startExamReview()">錯題覆測</button>`;}else{html+=`<div style="color:var(--success);font-weight:bold;font-size:1.5rem;margin:20px 0;">🌟 完全制霸！</div>`;} html+=`<br><button class="action-btn" style="background:#95a5a6; margin-top:20px; width:80%; padding:15px;" onclick="resetExamUI()">回大考首頁</button>`; res.innerHTML=html; }
 
     // ==========================================
-    // 6. 字母接接樂 (尺寸優化與統一設定版)
+    // 6. 遊戲引擎
     // ==========================================
     function startGame(diff) {
-        if(vocabDb[diff].length === 0) { alert("此難度題庫數量不足！請先擴充單字。"); return; }
+        if(vocabDb[diff].length === 0) { alert("此難度題庫數量不足！"); return; }
         currentDiff = diff; gameScore = 0; gameQIndex = 0; gameMistakes = [];
-        
         let shuffled = [...vocabDb[diff]].sort(() => 0.5 - Math.random());
         gameQuestions = shuffled.slice(0, 20);
-
         document.getElementById('game-intro').style.display = 'none';
         document.getElementById('game-result').style.display = 'none';
-        
         let playArea = document.getElementById('game-play');
         playArea.style.display = 'block';
-        
-        let board = document.getElementById('game-board');
-        board.offsetWidth; 
-
+        let board = document.getElementById('game-board'); board.offsetWidth; 
         initGameControls(); 
         playerX = (board.clientWidth - document.getElementById('game-player').clientWidth) / 2;
-        
         loadNextGameQ();
         isGamePaused = false;
-        
         cancelAnimationFrame(gameLoopId);
         gameLoopId = requestAnimationFrame(updateGame);
     }
-
     function quitGame() {
-        isGamePaused = true;
-        cancelAnimationFrame(gameLoopId);
-        document.getElementById('game-play').style.display = 'none';
-        document.getElementById('game-result').style.display = 'none';
-        document.getElementById('game-intro').style.display = 'block';
+        isGamePaused = true; cancelAnimationFrame(gameLoopId);
+        document.getElementById('game-play').style.display = 'none'; document.getElementById('game-result').style.display = 'none'; document.getElementById('game-intro').style.display = 'block';
         activeBlocks.forEach(b => b.el.remove()); activeBlocks = [];
     }
-
     function loadNextGameQ() {
         if(gameQIndex >= gameQuestions.length) { showGameResult(); return; }
-        
         activeBlocks.forEach(b => b.el.remove()); activeBlocks = [];
-        let q = gameQuestions[gameQIndex];
-        let conf = gameConfig[currentDiff];
-
+        let q = gameQuestions[gameQIndex]; let conf = gameConfig[currentDiff];
         document.getElementById('game-score-ui').innerText = `分數: ${gameScore}`;
         document.getElementById('game-progress-ui').innerText = `進度: ${gameQIndex+1}/20`;
         document.getElementById('game-target-trans').innerText = `${q.trans}`;
-        
-        let wordArr = q.word.split('');
-        let indices = [];
+        let wordArr = q.word.split(''); let indices = [];
         while(indices.length < conf.blanks && indices.length < wordArr.length) {
-            let r = Math.floor(Math.random() * wordArr.length);
-            if(!indices.includes(r)) indices.push(r);
+            let r = Math.floor(Math.random() * wordArr.length); if(!indices.includes(r)) indices.push(r);
         }
         indices.sort((a,b)=>a-b);
         let correctStr = indices.map(i => wordArr[i]).join('');
         indices.forEach(i => wordArr[i] = '_');
-        
         let playerEl = document.getElementById('game-player');
-        playerEl.innerText = wordArr.join('');
-        playerEl.dataset.correct = correctStr;
-        playerEl.dataset.full = q.word;
-        playerEl.style.backgroundColor = '#fff';
-        playerEl.style.color = 'var(--game)';
+        playerEl.innerText = wordArr.join(''); playerEl.dataset.correct = correctStr; playerEl.dataset.full = q.word;
+        playerEl.style.backgroundColor = '#fff'; playerEl.style.color = 'var(--game)';
         document.getElementById('game-msg').style.display = 'none';
-        
-        let opts = [correctStr];
-        const chars = 'abcdefghijklmnopqrstuvwxyz';
-        // 固定產生 4 個選項
-        while(opts.length < 4) {
-            let wr = ''; for(let i=0; i<conf.blanks; i++) wr += chars.charAt(Math.floor(Math.random()*chars.length));
-            if(!opts.includes(wr)) opts.push(wr);
-        }
+        let opts = [correctStr]; const chars = 'abcdefghijklmnopqrstuvwxyz';
+        while(opts.length < 4) { let wr = ''; for(let i=0; i<conf.blanks; i++) wr += chars.charAt(Math.floor(Math.random()*chars.length)); if(!opts.includes(wr)) opts.push(wr); }
         opts.sort(()=>0.5-Math.random());
-
-        let board = document.getElementById('game-board');
-        let bW = board.clientWidth || 300;
-        let laneW = bW / 4; // 均分 4 等分
-        
+        let board = document.getElementById('game-board'); let bW = board.clientWidth || 300; let laneW = bW / 4; 
         opts.forEach((o, i) => {
-            let el = document.createElement('div');
-            el.className = 'falling-item';
-            el.innerText = o;
-            board.appendChild(el);
-            // 控制在各自的軌道掉落，預留寬度防止超出
+            let el = document.createElement('div'); el.className = 'falling-item'; el.innerText = o; board.appendChild(el);
             let startX = (i * laneW) + (Math.random() * Math.max(0, laneW - 40));
             let startY = -40 - (Math.random() * 150);
             activeBlocks.push({ el: el, x: startX, y: startY, text: o });
         });
-
-        isGamePaused = false;
-        speakWord(q.word);
+        isGamePaused = false; speakWord(q.word);
     }
-
     function updateGame() {
         if(!isGamePaused) {
-            let board = document.getElementById('game-board');
-            let playerEl = document.getElementById('game-player');
-            let conf = gameConfig[currentDiff];
-            let pWidth = playerEl.clientWidth;
-            let bWidth = board.clientWidth;
-
-            if (keys.left) playerX -= 6;
-            if (keys.right) playerX += 6;
-            if (playerX < 0) playerX = 0;
-            if (playerX > bWidth - pWidth) playerX = bWidth - pWidth;
-
+            let board = document.getElementById('game-board'); let playerEl = document.getElementById('game-player');
+            let conf = gameConfig[currentDiff]; let pWidth = playerEl.clientWidth; let bWidth = board.clientWidth;
+            if (keys.left) playerX -= 6; if (keys.right) playerX += 6;
+            if (playerX < 0) playerX = 0; if (playerX > bWidth - pWidth) playerX = bWidth - pWidth;
             playerEl.style.left = playerX + 'px';
-
             let pRect = playerEl.getBoundingClientRect();
-
             for(let i=0; i<activeBlocks.length; i++) {
-                let blk = activeBlocks[i];
-                blk.y += conf.speed;
-                blk.el.style.top = blk.y + 'px';
-                blk.el.style.left = blk.x + 'px';
-                
+                let blk = activeBlocks[i]; blk.y += conf.speed;
+                blk.el.style.top = blk.y + 'px'; blk.el.style.left = blk.x + 'px';
                 let itemRect = blk.el.getBoundingClientRect();
-
-                if(pRect.left < itemRect.right && pRect.right > itemRect.left && pRect.top < itemRect.bottom && pRect.bottom > itemRect.top) {
-                    handleGameCollision(blk.text); break;
-                }
-
+                if(pRect.left < itemRect.right && pRect.right > itemRect.left && pRect.top < itemRect.bottom && pRect.bottom > itemRect.top) { handleGameCollision(blk.text); break; }
                 if(blk.y > board.clientHeight) { blk.y = -60 - (Math.random()*100); }
             }
         }
-        if(document.getElementById('section-game').classList.contains('active')) {
-            gameLoopId = requestAnimationFrame(updateGame);
-        }
+        if(document.getElementById('section-game').classList.contains('active')) { gameLoopId = requestAnimationFrame(updateGame); }
     }
-
     function handleGameCollision(text) {
-        isGamePaused = true;
-        let playerEl = document.getElementById('game-player');
-        let msg = document.getElementById('game-msg');
-        let q = gameQuestions[gameQIndex];
-        
-        playerEl.innerText = playerEl.dataset.full;
-        msg.style.display = 'block';
-
-        if(text === playerEl.dataset.correct) {
-            gameScore += 5;
-            playerEl.style.backgroundColor = 'var(--success)';
-            playerEl.style.color = 'white';
-            msg.innerText = "✅";
-        } else {
-            gameMistakes.push(q);
-            playerEl.style.backgroundColor = 'var(--error)';
-            playerEl.style.color = 'white';
-            msg.innerText = "❌";
-        }
-
+        isGamePaused = true; let playerEl = document.getElementById('game-player'); let msg = document.getElementById('game-msg'); let q = gameQuestions[gameQIndex];
+        playerEl.innerText = playerEl.dataset.full; msg.style.display = 'block';
+        if(text === playerEl.dataset.correct) { gameScore += 5; playerEl.style.backgroundColor = 'var(--success)'; playerEl.style.color = 'white'; msg.innerText = "✅"; } 
+        else { gameMistakes.push(q); playerEl.style.backgroundColor = 'var(--error)'; playerEl.style.color = 'white'; msg.innerText = "❌"; }
         setTimeout(() => { gameQIndex++; loadNextGameQ(); }, 1200);
     }
-
     function showGameResult() {
-        isGamePaused = true;
-        document.getElementById('game-play').style.display = 'none';
-        let res = document.getElementById('game-result');
-        res.style.display = 'block';
-        
-        let html = `<h2 style="color:var(--game);">遊戲結束！</h2>
-                    <div style="font-size:60px; font-weight:bold; margin:10px 0; color:var(--game);">${gameScore} 分</div>`;
-        
+        isGamePaused = true; document.getElementById('game-play').style.display = 'none'; let res = document.getElementById('game-result'); res.style.display = 'block';
+        let html = `<h2 style="color:var(--game);">遊戲結束！</h2><div style="font-size:60px; font-weight:bold; margin:10px 0; color:var(--game);">${gameScore} 分</div>`;
         if(gameMistakes.length > 0) {
             let uniqueM = [...new Set(gameMistakes.map(m=>m.word))].map(w=>gameMistakes.find(m=>m.word===w));
             html += `<h4 style="margin:20px 0 10px 0; color:#666;">📝 漏接單字筆記</h4><div style="max-height:200px; overflow-y:auto; border:1px solid #eee; border-radius:10px; padding:10px; text-align:left; background:white;">`;
-            uniqueM.forEach(m => { html += `<div class="review-item"><span class="review-correct">${m.word}</span> <span style="color:#666;">${m.trans}</span></div>`; });
-            html += `</div>`;
-        } else {
-            html += `<div style="color:var(--success); font-weight:bold; font-size:1.5rem; margin:20px 0;">🎉 動態視力滿分！一字不漏！</div>`;
-        }
-        
-        html += `<button class="submit-btn" style="background:var(--game); margin-top:20px;" onclick="quitGame()">回到遊戲選單</button>`;
-        res.innerHTML = html;
+            uniqueM.forEach(m => { html += `<div class="review-item"><span class="review-correct">${m.word}</span> <span style="color:#666;">${m.trans}</span></div>`; }); html += `</div>`;
+        } else { html += `<div style="color:var(--success); font-weight:bold; font-size:1.5rem; margin:20px 0;">🎉 動態視力滿分！一字不漏！</div>`; }
+        html += `<button class="submit-btn" style="background:var(--game); margin-top:20px;" onclick="quitGame()">回到遊戲選單</button>`; res.innerHTML = html;
     }
-
     function initGameControls() {
-        if(controlsInitialized) return;
-        controlsInitialized = true;
-
-        let board = document.getElementById('game-board');
-        let playerEl = document.getElementById('game-player');
-
-        window.addEventListener('keydown', (e) => {
-            if(e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') keys.left = true;
-            if(e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') keys.right = true;
-        });
-        window.addEventListener('keyup', (e) => {
-            if(e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') keys.left = false;
-            if(e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') keys.right = false;
-        });
-
+        if(controlsInitialized) return; controlsInitialized = true;
+        let board = document.getElementById('game-board'); let playerEl = document.getElementById('game-player');
+        window.addEventListener('keydown', (e) => { if(e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') keys.left = true; if(e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') keys.right = true; });
+        window.addEventListener('keyup', (e) => { if(e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') keys.left = false; if(e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') keys.right = false; });
         let isDragging = false;
-        function updatePlayerPos(clientX) {
-            let rect = board.getBoundingClientRect();
-            let x = clientX - rect.left;
-            let w = playerEl.clientWidth;
-            if(x < w/2) x = w/2;
-            if(x > rect.width - w/2) x = rect.width - w/2;
-            playerX = x - (w/2); 
-        }
-
+        function updatePlayerPos(clientX) { let rect = board.getBoundingClientRect(); let x = clientX - rect.left; let w = playerEl.clientWidth; if(x < w/2) x = w/2; if(x > rect.width - w/2) x = rect.width - w/2; playerX = x - (w/2); }
         board.addEventListener('touchstart', (e) => { e.preventDefault(); isDragging=true; updatePlayerPos(e.touches[0].clientX); }, {passive: false});
         board.addEventListener('touchmove', (e) => { e.preventDefault(); if(isDragging) updatePlayerPos(e.touches[0].clientX); }, {passive: false});
         board.addEventListener('touchend', () => isDragging=false);
-
         board.addEventListener('mousedown', (e) => { isDragging=true; updatePlayerPos(e.clientX); });
         window.addEventListener('mousemove', (e) => { if(isDragging) updatePlayerPos(e.clientX); });
         window.addEventListener('mouseup', () => isDragging=false);
         board.addEventListener('mouseleave', () => isDragging=false);
     }
 
+    // ==========================================
+    // 7. 文法測驗 (透過 DOM 建立選項防引號崩潰)
+    // ==========================================
+    function nextGrammarQuestion() {
+        if(allGrammarQuestions.length === 0) {
+            document.getElementById('gr-question').innerText = "文法題庫尚未載入或沒有題目。";
+            return;
+        }
+        grammarLocked = false;
+        document.getElementById('feedback-grammar').innerText = "";
+        document.getElementById('nextBtn-grammar').style.display = "none";
+        
+        currentGrammar = allGrammarQuestions[Math.floor(Math.random() * allGrammarQuestions.length)];
+        document.getElementById('gr-question').innerText = currentGrammar.question;
+        
+        let container = document.getElementById('grOptionsContainer');
+        container.innerHTML = "";
+        
+        currentGrammar.options.forEach(opt => {
+            if(!opt || opt.trim() === "") return;
+            let btn = document.createElement('button');
+            btn.className = 'opt-btn vocab-opt-btn';
+            btn.style.textAlign = 'left';
+            btn.style.padding = '10px 15px';
+            btn.innerText = opt;
+            
+            btn.onclick = () => {
+                if(grammarLocked) return;
+                grammarLocked = true;
+                let fb = document.getElementById('feedback-grammar');
+                
+                if(opt === currentGrammar.correct) {
+                    btn.classList.add('correct');
+                    fb.style.color = "var(--success)";
+                    fb.innerText = "✅ 答對了！";
+                    score += 10;
+                } else {
+                    btn.classList.add('wrong');
+                    Array.from(container.children).forEach(b => {
+                        if(b.innerText === currentGrammar.correct) b.classList.add('correct');
+                    });
+                    fb.style.color = "var(--error)";
+                    fb.innerHTML = `❌ 答錯囉！<br><span style="color:#555;font-size:1.1rem;display:block;margin-top:8px;text-align:left;line-height:1.6;background:#f5eef8;padding:10px;border-radius:8px;">💡 <b>解析：</b>${currentGrammar.exp}</span>`;
+                }
+                document.getElementById('scoreDisplay').innerText = `日常累積積分: ${score}`;
+                document.getElementById('nextBtn-grammar').style.display = "block";
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    // 啟動程式
     loadData();
 
 </script>
